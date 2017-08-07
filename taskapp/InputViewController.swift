@@ -7,17 +7,18 @@
 //
 
 import UIKit
-import RealmSwift    // 追加する
-import UserNotifications    // 追加
+import RealmSwift
+import UserNotifications
 
 class InputViewController: UIViewController {
     
     @IBOutlet weak var titleTextField: UITextField!
     @IBOutlet weak var contentsTextView: UITextView!
     @IBOutlet weak var datePicker: UIDatePicker!
+    @IBOutlet weak var categoryTextField: UITextField! //add
     
-    var task: Task!   // 追加する
-    let realm = try! Realm()    // 追加する
+    var task: Task!
+    let realm = try! Realm()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -29,6 +30,7 @@ class InputViewController: UIViewController {
         self.view.addGestureRecognizer(tapGesture)
         
         titleTextField.text = task.title
+        categoryTextField.text = task.category //add
         contentsTextView.text = task.contents
         datePicker.date = task.date as Date
     }
@@ -42,11 +44,11 @@ class InputViewController: UIViewController {
         // キーボードを閉じる
         view.endEditing(true)
     }
-    
-    // 追加する
+
     override func viewWillDisappear(_ animated: Bool) {
         try! realm.write {
             self.task.title = self.titleTextField.text!
+            self.task.category = self.categoryTextField.text! //add
             self.task.contents = self.contentsTextView.text
             self.task.date = self.datePicker.date as NSDate
             self.realm.add(self.task, update: true)
@@ -60,6 +62,7 @@ class InputViewController: UIViewController {
     func setNotification(task: Task) {
         let content = UNMutableNotificationContent()
         content.title = task.title
+        //content.category = task.category //add
         content.body  = task.contents       // bodyが空だと音しか出ない
         content.sound = UNNotificationSound.default()
         

@@ -7,28 +7,34 @@
 //
 
 import UIKit
-import RealmSwift   // ←追加
-import UserNotifications    // 追加
+import RealmSwift
+import UserNotifications
 
-class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
+class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UISearchBarDelegate {
 
+    @IBOutlet weak var categorySearchBar: UISearchBar!
     @IBOutlet weak var tableView: UITableView!
     
     // Realmインスタンスを取得する
-    let realm = try! Realm()  // ←追加
+    let realm = try! Realm()
     
     // DB内のタスクが格納されるリスト。
     // 日付近い順\順でソート：降順
     // 以降内容をアップデートするとリスト内は自動的に更新される。
-    var taskArray = try! Realm().objects(Task.self).sorted(byKeyPath: "date", ascending: false)  // ←追加
-
+    var taskArray = try! Realm().objects(Task.self).sorted(byKeyPath: "date", ascending: false)
     
+    //検索結果配列
+    var searchResult = [String]()
+
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
         tableView.delegate = self
         tableView.dataSource = self
+        
+        //add
+        categorySearchBar.delegate = self
     }
 
     override func didReceiveMemoryWarning() {
@@ -38,7 +44,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
 
     // でーたの数を返す
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return taskArray.count  // ←追加する
+        return taskArray.count
     }
     
     // 各セルの内容を返すメソッド
@@ -80,7 +86,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
             let center = UNUserNotificationCenter.current()
             center.removePendingNotificationRequests(withIdentifiers: [String(task.id)])
 
-            // データベースから削除する  // ←以降追加する
+            // データベースから削除する 
             try! realm.write {
                 self.realm.delete(self.taskArray[indexPath.row])
                 tableView.deleteRows(at: [indexPath as IndexPath], with: UITableViewRowAnimation.fade)
@@ -96,7 +102,24 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         }
     }
     
-    // segue で画面遷移するに呼ばれる
+    // add
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        
+        if(categorySearchBar.text != ""){
+            let predicate = NSPredicate(format: "category = %@", categorySearchBar.text!)
+            var resultArray = realm.objects(Task).filter(predicate)
+            taskArray = resultArray
+        }else{
+            taskArray = try! Realm().objects(Task.self).sorted(byKeyPath: "date", ascending: false)
+        }
+        
+        //テーブルを再読み込みする。
+        tableView.reloadData()
+        
+    }
+
+    
+    // segue で画面遷移するときに呼ばれる
     override func prepare(for segue: UIStoryboardSegue, sender: Any?){
         let inputViewController:InputViewController = segue.destination as! InputViewController
         
